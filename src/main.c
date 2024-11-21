@@ -22,8 +22,6 @@
 
 /* Includes ===============================================================> */
 
-#include <stddef.h>
-
 #define FEROX_RAYLIB_IMPLEMENTATION
 #include "ferox_raylib.h"
 
@@ -35,14 +33,14 @@
 
 // clang-format off
 
-#define BENCHMARK_REPEAT_LIMIT  3
+#define BENCHMARK_REPEAT_LIMIT  10
 #define BENCHMARK_TIME_LIMIT    3.0f
 
 // clang-format on
 
 /* Typedefs ===============================================================> */
 
-typedef void (*InitBenchFunc)(void);
+typedef void (*InitBenchFunc)(int);
 typedef void (*UpdateBenchFunc)(void);
 typedef void (*DeinitBenchFunc)(void);
 
@@ -75,6 +73,7 @@ static const DeinitBenchFunc deinitBenchFuncs[] = { DeinitBenchSmash,
 
 static float benchmarkCounter = 0.0f;
 
+static int benchmarkBodyCount = (1 << 10);
 static int benchmarkIndex = 0;
 static int benchmarkRepeatCount = 0;
 
@@ -87,48 +86,44 @@ int main(void) {
 
     SetExitKey(KEY_NULL);
 
-    do {
-        initBenchFuncs[benchmarkIndex]();
+    initBenchFuncs[benchmarkIndex](benchmarkBodyCount);
 
-        while (!WindowShouldClose()) {
-            BeginDrawing();
+    while (!WindowShouldClose()) {
+        if (benchmarkCounter >= BENCHMARK_TIME_LIMIT) {
+            deinitBenchFuncs[benchmarkIndex]();
 
-            ClearBackground(ColorBrightness(RAYWHITE, -0.05f));
+            benchmarkCounter = 0.0f, benchmarkRepeatCount++;
 
-            {
-                updateBenchFuncs[benchmarkIndex]();
+            if (benchmarkRepeatCount >= BENCHMARK_REPEAT_LIMIT)
+                benchmarkIndex++;
 
-                benchmarkCounter += GetFrameTime();
-
-                if (benchmarkCounter >= BENCHMARK_TIME_LIMIT) {
-                    benchmarkCounter = 0.0f;
-
-                    break;
-                }
-            }
-
-            DrawFPS(8, 8);
-
-            DrawTextEx(GetFontDefault(),
-                       TextFormat("[%d:%d] %.2f",
-                                  benchmarkIndex,
-                                  benchmarkRepeatCount,
-                                  benchmarkCounter),
-                       (Vector2) { .x = 8.0f, .y = 32.0f },
-                       GetFontDefault().baseSize,
-                       1.0f,
-                       DARKGREEN);
-
-            EndDrawing();
+            initBenchFuncs[benchmarkIndex](benchmarkBodyCount);
         }
 
-        deinitBenchFuncs[benchmarkIndex]();
+        BeginDrawing();
 
-        benchmarkRepeatCount++;
+        ClearBackground(ColorBrightness(RAYWHITE, -0.05f));
 
-        if (benchmarkRepeatCount >= BENCHMARK_REPEAT_LIMIT)
-            benchmarkIndex++, benchmarkRepeatCount = 0;
-    } while (initBenchFuncs[benchmarkIndex] != NULL);
+        {
+            updateBenchFuncs[benchmarkIndex]();
+
+            benchmarkCounter += GetFrameTime();
+        }
+
+        DrawFPS(8, 8);
+
+        DrawTextEx(GetFontDefault(),
+                   TextFormat("[%d:%d] %.2f",
+                              benchmarkIndex,
+                              benchmarkRepeatCount,
+                              benchmarkCounter),
+                   (Vector2) { .x = 8.0f, .y = 32.0f },
+                   GetFontDefault().baseSize,
+                   1.0f,
+                   DARKGREEN);
+
+        EndDrawing();
+    }
 
     CloseWindow();
 

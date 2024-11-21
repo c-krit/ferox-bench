@@ -23,6 +23,11 @@
 #ifndef FEROX_BENCHMARK_H
 #define FEROX_BENCHMARK_H
 
+/* Includes ===============================================================> */
+
+#include <assert.h>
+#include <stddef.h>
+
 /* Macros =================================================================> */
 
 #define SCREEN_WIDTH   1280
@@ -33,10 +38,10 @@
 /* ========================================================================> */
 
 #define InitBench(name) \
-    void InitBench##name(void); void InitBench##name(void)
+    void InitBench##name(int bodyCount); void InitBench##name(int bodyCount)
 
 #define InitBenchExtern(name) \
-    void InitBench##name(void);
+    void InitBench##name(int bodyCount);
 
 #define UpdateBench(name) \
     void UpdateBench##name(void); void UpdateBench##name(void)

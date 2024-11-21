@@ -32,9 +32,9 @@
 
 // clang-format off
 
-#define BOX_SIZE        1.0f
+#define BOX_SIZE                1.0f
 
-#define SQRT_BOX_COUNT  32
+#define BALL_IMPULSE_MAGNITUDE  (1 << 11)
 
 // clang-format on
 
@@ -56,10 +56,39 @@ static Camera2D camera = {
 
 static Color ballColor = RED, boxColor = GRAY;
 
+static Rectangle boxRectangle;
+
+static RenderTexture boxRenderTexture;
+
 /* Public Functions =======================================================> */
 
 InitBench(Smash) {
     world = frCreateWorld(frStructZero(frVector2), CELL_SIZE);
+
+    {
+        boxRenderTexture = LoadRenderTexture(frUnitsToPixels(BOX_SIZE),
+                                             frUnitsToPixels(BOX_SIZE));
+
+        {
+            BeginTextureMode(boxRenderTexture);
+
+            ClearBackground(BLANK);
+
+            boxRectangle = (Rectangle) { .width = frUnitsToPixels(BOX_SIZE),
+                                         .height = frUnitsToPixels(BOX_SIZE) };
+
+            DrawRectangleLinesEx(boxRectangle, 2.0f, boxColor);
+
+            DrawCircleV((Vector2) { .x = 0.5f * frUnitsToPixels(BOX_SIZE),
+                                    .y = 0.5f * frUnitsToPixels(BOX_SIZE) },
+                        2.0f,
+                        boxColor);
+
+            EndTextureMode();
+        }
+    }
+
+    int sqrtBoxCount = (int) sqrtf((float) bodyCount);
 
     {
         boxShape = frCreateRectangle((frMaterial) { .density = 1.0f,
@@ -67,15 +96,15 @@ InitBench(Smash) {
                                      BOX_SIZE,
                                      BOX_SIZE);
 
-        frVector2 boxOrigin = { .x = 0.5f
-                                     * (frPixelsToUnits(SCREEN_WIDTH)
-                                        - (BOX_SIZE * SQRT_BOX_COUNT)),
-                                .y = 0.5f
-                                     * (frPixelsToUnits(SCREEN_HEIGHT)
-                                        - (BOX_SIZE * SQRT_BOX_COUNT)) };
+        frVector2 boxOrigin = {
+            .x = 0.5f
+                 * (frPixelsToUnits(SCREEN_WIDTH) - (BOX_SIZE * sqrtBoxCount)),
+            .y = 0.5f
+                 * (frPixelsToUnits(SCREEN_HEIGHT) - (BOX_SIZE * sqrtBoxCount))
+        };
 
-        for (int y = 0; y < SQRT_BOX_COUNT; y++)
-            for (int x = 0; x < SQRT_BOX_COUNT; x++) {
+        for (int y = 0; y < sqrtBoxCount; y++)
+            for (int x = 0; x < sqrtBoxCount; x++) {
                 frVector2 boxPosition = {
                     .x = (boxOrigin.x + (0.5f * BOX_SIZE)) + (x * BOX_SIZE),
                     .y = (boxOrigin.y + (0.5f * BOX_SIZE)) + (y * BOX_SIZE)
@@ -86,8 +115,6 @@ InitBench(Smash) {
                                                     boxShape);
 
                 frAddBodyToWorld(world, box);
-
-                frSetBodyUserData(box, &boxColor);
             }
     }
 
@@ -106,7 +133,7 @@ InitBench(Smash) {
 
         frApplyImpulseToBody(ball,
                              frGetBodyPosition(ball),
-                             (frVector2) { .x = (1 << 11) });
+                             (frVector2) { .x = BALL_IMPULSE_MAGNITUDE });
 
         frAddBodyToWorld(world, ball);
     }
@@ -123,12 +150,28 @@ UpdateBench(Smash) {
         Color *bodyColor = frGetBodyUserData(body);
 
         if (bodyColor != NULL) frDrawBodyLines(body, 2.0f, *bodyColor);
+        else {
+            frVector2 bodyPosition = frGetBodyPosition(body);
+
+            DrawTexturePro(boxRenderTexture.texture,
+                           boxRectangle,
+                           (Rectangle) { .x = frUnitsToPixels(bodyPosition.x),
+                                         .y = frUnitsToPixels(bodyPosition.y),
+                                         .width = frUnitsToPixels(BOX_SIZE),
+                                         .height = frUnitsToPixels(BOX_SIZE) },
+                           (Vector2) { .x = 0.5f * frUnitsToPixels(BOX_SIZE),
+                                       .y = 0.5f * frUnitsToPixels(BOX_SIZE) },
+                           RAD2DEG * frGetBodyAngle(body),
+                           WHITE);
+        }
     }
 
     EndMode2D();
 }
 
 DeinitBench(Smash) {
+    UnloadRenderTexture(boxRenderTexture);
+
     frReleaseShape(ballShape), frReleaseShape(boxShape);
 
     frReleaseWorld(world);
