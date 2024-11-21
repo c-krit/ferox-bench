@@ -38,6 +38,8 @@
 #define BENCHMARK_SAMPLE_RATE   1.0f
 #define BENCHMARK_TIME_LIMIT    10.0f
 
+#define MAX_FILE_NAME_LENGTH    64
+
 // clang-format on
 
 /* Typedefs ===============================================================> */
@@ -85,6 +87,8 @@ static const int benchmarkSampleCount = ((BENCHMARK_TIME_LIMIT
 
 /* Private Variables ======================================================> */
 
+static char benchmarkResultFileName[MAX_FILE_NAME_LENGTH];
+
 static float benchmarkCounter = 0.0f;
 static float benchmarkSampleCounter = 0.0f;
 
@@ -105,6 +109,9 @@ int main(void) {
 
     SetExitKey(KEY_NULL);
 
+    TextCopy(benchmarkResultFileName,
+             TextFormat("ferox-benchmark-%d.txt", benchmarkBodyCount));
+
     initBenchFuncs[benchmarkIndex](benchmarkBodyCount);
 
     while (!WindowShouldClose()) {
@@ -123,6 +130,8 @@ int main(void) {
                 averageFPS[benchmarkIndex] = fpsSum / benchmarkSampleCount;
 
                 benchmarkIndex++;
+
+                if (initBenchFuncs[benchmarkIndex] == NULL) break;
             }
 
             initBenchFuncs[benchmarkIndex](benchmarkBodyCount);
@@ -154,6 +163,10 @@ int main(void) {
                    DARKGREEN);
 
         EndDrawing();
+    }
+
+    {
+        /* TODO: ... */
     }
 
     CloseWindow();
