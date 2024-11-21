@@ -22,6 +22,8 @@
 
 /* Includes ===============================================================> */
 
+#include <stdio.h>
+
 #define FEROX_RAYLIB_IMPLEMENTATION
 #include "ferox_raylib.h"
 
@@ -95,7 +97,7 @@ static float benchmarkSampleCounter = 0.0f;
 static long long int fpsSum;
 
 static int benchmarkBodyCount = (1 << 11);
-static int benchmarkIndex = 1;
+static int benchmarkIndex = 0;
 static int benchmarkRepeatCount = 0;
 
 static int averageFPS[BENCHMARK_COUNT];
@@ -129,7 +131,7 @@ int main(void) {
             if (benchmarkRepeatCount >= BENCHMARK_REPEAT_LIMIT) {
                 averageFPS[benchmarkIndex] = fpsSum / benchmarkSampleCount;
 
-                benchmarkIndex++;
+                benchmarkIndex++, benchmarkRepeatCount = 0;
 
                 if (initBenchFuncs[benchmarkIndex] == NULL) break;
             }
@@ -166,7 +168,13 @@ int main(void) {
     }
 
     {
-        /* TODO: ... */
+        FILE *file = fopen(benchmarkResultFileName, "a");
+
+        for (int i = 0; i < BENCHMARK_COUNT; i++)
+            fputs(TextFormat("%d %d\n", benchmarkBodyCount, averageFPS[i]),
+                  file);
+
+        fclose(file);
     }
 
     CloseWindow();
