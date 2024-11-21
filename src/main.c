@@ -33,14 +33,17 @@
 
 // clang-format off
 
+#define BENCHMARK_COUNT         2
 #define BENCHMARK_REPEAT_LIMIT  10
-#define BENCHMARK_TIME_LIMIT    3.0f
+#define BENCHMARK_SAMPLE_RATE   1.0f
+#define BENCHMARK_TIME_LIMIT    10.0f
 
 // clang-format on
 
 /* Typedefs ===============================================================> */
 
 typedef void (*InitBenchFunc)(int);
+typedef void (*DrawBenchFunc)(void);
 typedef void (*UpdateBenchFunc)(void);
 typedef void (*DeinitBenchFunc)(void);
 
@@ -48,6 +51,9 @@ typedef void (*DeinitBenchFunc)(void);
 
 InitBenchExtern(Smash);
 InitBenchExtern(Stacks);
+
+DrawBenchExtern(Smash);
+DrawBenchExtern(Stacks);
 
 UpdateBenchExtern(Smash);
 UpdateBenchExtern(Stacks);
@@ -61,6 +67,10 @@ static const InitBenchFunc initBenchFuncs[] = { InitBenchSmash,
                                                 InitBenchStacks,
                                                 NULL };
 
+static const DrawBenchFunc drawBenchFuncs[] = { DrawBenchSmash,
+                                                DrawBenchStacks,
+                                                NULL };
+
 static const UpdateBenchFunc updateBenchFuncs[] = { UpdateBenchSmash,
                                                     UpdateBenchStacks,
                                                     NULL };
@@ -69,13 +79,22 @@ static const DeinitBenchFunc deinitBenchFuncs[] = { DeinitBenchSmash,
                                                     DeinitBenchStacks,
                                                     NULL };
 
+static const int benchmarkSampleCount = ((BENCHMARK_TIME_LIMIT
+                                          / BENCHMARK_SAMPLE_RATE)
+                                         * (BENCHMARK_REPEAT_LIMIT));
+
 /* Private Variables ======================================================> */
 
 static float benchmarkCounter = 0.0f;
+static float benchmarkSampleCounter = 0.0f;
 
-static int benchmarkBodyCount = (1 << 10);
-static int benchmarkIndex = 0;
+static long long int fpsSum;
+
+static int benchmarkBodyCount = (1 << 11);
+static int benchmarkIndex = 1;
 static int benchmarkRepeatCount = 0;
+
+static int averageFPS[BENCHMARK_COUNT];
 
 /* Public Functions =======================================================> */
 
@@ -89,36 +108,48 @@ int main(void) {
     initBenchFuncs[benchmarkIndex](benchmarkBodyCount);
 
     while (!WindowShouldClose()) {
+        if (benchmarkSampleCounter >= BENCHMARK_SAMPLE_RATE) {
+            fpsSum += GetFPS();
+
+            benchmarkSampleCounter = 0.0f;
+        }
+
         if (benchmarkCounter >= BENCHMARK_TIME_LIMIT) {
             deinitBenchFuncs[benchmarkIndex]();
 
             benchmarkCounter = 0.0f, benchmarkRepeatCount++;
 
-            if (benchmarkRepeatCount >= BENCHMARK_REPEAT_LIMIT)
+            if (benchmarkRepeatCount >= BENCHMARK_REPEAT_LIMIT) {
+                averageFPS[benchmarkIndex] = fpsSum / benchmarkSampleCount;
+
                 benchmarkIndex++;
+            }
 
             initBenchFuncs[benchmarkIndex](benchmarkBodyCount);
+        }
+
+        {
+            updateBenchFuncs[benchmarkIndex]();
+
+            benchmarkCounter += GetFrameTime();
+            benchmarkSampleCounter += GetFrameTime();
         }
 
         BeginDrawing();
 
         ClearBackground(ColorBrightness(RAYWHITE, -0.05f));
 
-        {
-            updateBenchFuncs[benchmarkIndex]();
-
-            benchmarkCounter += GetFrameTime();
-        }
+        drawBenchFuncs[benchmarkIndex]();
 
         DrawFPS(8, 8);
 
         DrawTextEx(GetFontDefault(),
-                   TextFormat("[%d:%d] %.2f",
+                   TextFormat("[#%d:%d] %.2f",
                               benchmarkIndex,
                               benchmarkRepeatCount,
                               benchmarkCounter),
                    (Vector2) { .x = 8.0f, .y = 32.0f },
-                   GetFontDefault().baseSize,
+                   (GetFontDefault().baseSize << 1),
                    1.0f,
                    DARKGREEN);
 

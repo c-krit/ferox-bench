@@ -43,6 +43,12 @@
 #define InitBenchExtern(name) \
     void InitBench##name(int bodyCount);
 
+#define DrawBench(name) \
+    void DrawBench##name(void); void DrawBench##name(void)
+
+#define DrawBenchExtern(name) \
+    void DrawBench##name(void);
+
 #define UpdateBench(name) \
     void UpdateBench##name(void); void UpdateBench##name(void)
 

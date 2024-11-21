@@ -23,10 +23,9 @@
 /* Includes ===============================================================> */
 
 #include "ferox.h"
-#include "ferox_raylib.h"
-#include "ferox_benchmark.h"
 
-#include "raylib.h"
+#include "ferox_benchmark.h"
+#include "ferox_raylib.h"
 
 /* Macros ================================================================== */
 
@@ -34,13 +33,13 @@
 
 #define BOX_SIZE                1.0f
 
-#define BALL_IMPULSE_MAGNITUDE  (1 << 11)
+#define BALL_IMPULSE_MAGNITUDE  (1 << 12)
 
 // clang-format on
 
 /* Constants =============================================================== */
 
-static const float CELL_SIZE = BOX_SIZE, DELTA_TIME = 1.0f / TARGET_FPS;
+static const float CELL_SIZE = 1.2f * BOX_SIZE, DELTA_TIME = 1.0f / TARGET_FPS;
 
 /* Private Variables ======================================================> */
 
@@ -123,11 +122,12 @@ InitBench(Smash) {
                                                   .friction = 0.5f },
                                    frPixelsToUnits(84.0f));
 
-        frBody *ball = frCreateBodyFromShape(
-            FR_BODY_DYNAMIC,
-            frVector2PixelsToUnits((frVector2) { .x = -0.5f * SCREEN_WIDTH,
-                                                 .y = 0.5f * SCREEN_HEIGHT }),
-            ballShape);
+        frBody *ball =
+            frCreateBodyFromShape(FR_BODY_DYNAMIC,
+                                  frVector2PixelsToUnits((frVector2) {
+                                      .x = -0.5f * SCREEN_WIDTH,
+                                      .y = (0.5f * SCREEN_HEIGHT) + 1.0f }),
+                                  ballShape);
 
         frSetBodyUserData(ball, &ballColor);
 
@@ -139,9 +139,7 @@ InitBench(Smash) {
     }
 }
 
-UpdateBench(Smash) {
-    { frUpdateWorld(world, DELTA_TIME); }
-
+DrawBench(Smash) {
     BeginMode2D(camera);
 
     for (int i = 0, n = frGetBodyCountInWorld(world); i < n; i++) {
@@ -169,10 +167,16 @@ UpdateBench(Smash) {
     EndMode2D();
 }
 
+UpdateBench(Smash) {
+    frUpdateWorld(world, DELTA_TIME);
+}
+
 DeinitBench(Smash) {
     UnloadRenderTexture(boxRenderTexture);
 
     frReleaseShape(ballShape), frReleaseShape(boxShape);
 
     frReleaseWorld(world);
+
+    world = NULL, ballShape = boxShape = NULL;
 }
