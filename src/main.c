@@ -111,9 +111,6 @@ int main(void) {
 
     SetExitKey(KEY_NULL);
 
-    TextCopy(benchmarkResultFileName,
-             TextFormat("ferox-benchmark-%d.txt", benchmarkBodyCount));
-
     initBenchFuncs[benchmarkIndex](benchmarkBodyCount);
 
     while (!WindowShouldClose()) {
@@ -168,28 +165,17 @@ int main(void) {
     }
 
     {
-        /*
-            set title "Benchmark #0"
-            set term wxt size 1024,768
-            set key font ",14"
-            set xlabel "Number of Rigid Bodies"
-            set ylabel "Average FPS"
-            set xrange [256:2500]
-            set xtics 256
-            set xtics nomirror
-            set ytics 128
-            set ytics nomirror
-            plot "v0.8.6-bench-0.txt" with lines title "v0.8.6 'Pentafist'", \
-                "v0.9.7-bench-0.txt" with lines title "v0.9.7 'Lemurian'"
-        */
+        for (int i = 0; i < BENCHMARK_COUNT; i++) {
+            TextCopy(benchmarkResultFileName,
+                     TextFormat("ferox_bench-%d.txt", i));
 
-        FILE *file = fopen(benchmarkResultFileName, "a");
+            FILE *file = fopen(benchmarkResultFileName, "a");
 
-        for (int i = 0; i < BENCHMARK_COUNT; i++)
             fputs(TextFormat("%d %d\n", benchmarkBodyCount, averageFPS[i]),
                   file);
 
-        fclose(file);
+            fclose(file);
+        }
     }
 
     CloseWindow();

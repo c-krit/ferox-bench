@@ -30,35 +30,35 @@
 
 /* Macros =================================================================> */
 
-#define SCREEN_WIDTH   1280
-#define SCREEN_HEIGHT  800
+#define SCREEN_WIDTH  1280
+#define SCREEN_HEIGHT 800
 
-#define TARGET_FPS     60
+#define TARGET_FPS 60
 
 /* ========================================================================> */
 
-#define InitBench(name) \
-    void InitBench##name(int bodyCount); void InitBench##name(int bodyCount)
+#define InitBench(name)                  \
+    void InitBench##name(int bodyCount); \
+    void InitBench##name(int bodyCount)
 
-#define InitBenchExtern(name) \
-    void InitBench##name(int bodyCount);
+#define InitBenchExtern(name) void InitBench##name(int bodyCount);
 
-#define DrawBench(name) \
-    void DrawBench##name(void); void DrawBench##name(void)
+#define DrawBench(name)         \
+    void DrawBench##name(void); \
+    void DrawBench##name(void)
 
-#define DrawBenchExtern(name) \
-    void DrawBench##name(void);
+#define DrawBenchExtern(name) void DrawBench##name(void);
 
-#define UpdateBench(name) \
-    void UpdateBench##name(void); void UpdateBench##name(void)
+#define UpdateBench(name)         \
+    void UpdateBench##name(void); \
+    void UpdateBench##name(void)
 
-#define UpdateBenchExtern(name) \
-    void UpdateBench##name(void);
+#define UpdateBenchExtern(name) void UpdateBench##name(void);
 
-#define DeinitBench(name) \
-    void DeinitBench##name(void); void DeinitBench##name(void)
+#define DeinitBench(name)         \
+    void DeinitBench##name(void); \
+    void DeinitBench##name(void)
 
-#define DeinitBenchExtern(name) \
-    void DeinitBench##name(void);
+#define DeinitBenchExtern(name) void DeinitBench##name(void);
 
-#endif // `FEROX_BENCHMARK_H`
+#endif  // `FEROX_BENCHMARK_H`

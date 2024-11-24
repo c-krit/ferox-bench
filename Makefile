@@ -36,7 +36,7 @@ _COLOR_END = \033[m
 
 # ============================================================================>
 
-PROJECT_NAME = ferox-benchmark
+PROJECT_NAME = ferox-bench
 
 LOG_PREFIX = ${_COLOR_BEGIN} ~>${_COLOR_END}
 
